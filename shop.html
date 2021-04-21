@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="feather-icon/feather.css">
+</head>
+<style>
+    /* body {
+        background-color: rgb(238, 238, 238);
+    } */
+
+    .product img {
+        height: 80px !important;
+        width: auto;
+        margin-bottom: -40px;
+    }
+
+    .product:hover .pimage {
+        transform: rotate(5deg) scale(1.05);
+        transition: all 0.8s;
+    }
+
+    .product:hover {
+        transform: scale(1.05);
+        transition: all 0.8s;
+    }
+
+    .product {
+        transition: all 0.8s;
+    }
+
+    .cart:hover {
+        transform: scale(1.03);
+    }
+
+    .cart {
+        transition: all 0.5s;
+    }
+
+    .cart img {
+        height: 45px;
+        width: auto;
+    }
+</style>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-8">
+                <div class="d-flex justify-content-between align-items-baseline my-2">
+                    <div>
+                        <h5 class="mb-0 text-primary">Fake Store</h5>
+                        <small>Bootstrap And jQuery</small>
+                    </div>
+                    <div>
+                        <div class="form-inline">
+                            <input type="text" class="search form-control mr-2" placeholder="Search Items">
+                            <select name="" class="custom-select cat" id="">
+                                <option value="">All Category</option>
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="products card-columns">
+
+
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="position-sticky mt-3" style="top: 5px;">
+                    <div class="d-flex justify-content-between align-items-end">
+                        <span class="h5 text-primary">Cart</span>
+                        <div>
+                            <i class="feather-shopping-cart text-primary font-weight-bolder h5"></i>
+                            <span class="badge-pill badge-info cart-count">0</span>
+                        </div>
+                    </div>
+                    <div class="carts mt-2">
+
+                    </div>
+                    <div class="total">
+                        <p class="text-black-50">Cart is empty</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script>
+        let data = [];
+        let catData = [];
+
+        function toShow(x) {
+            $('.products').empty();
+            x.map(product => {
+                $('.products').append(`
+                <div class="card product border-0 pt-3">
+                    <img src="${product.image}" alt="" class="ml-3 pimage">
+                        <div class="card-body border rounded shadow">
+                            <h6 class="text-info mt-5 text-nowrap  overflow-hidden">${product.title}</h6>
+                            <p>${product.description.substr(0, 130) + "..."}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                            <span class="h3">$<span class="h5 ml-1">${product.price}</span></span>
+                            <button class="btn btn-info cart-btn" productId="${product.id}">Add <i class="feather-shopping-cart"></i></button>
+                        </div>
+                        </div>
+                    </div>
+                `)
+            })
+        };
+
+        $.get("https://fakestoreapi.com/products", res => {
+            data = res;
+            toShow(res);
+        });
+
+        $.get("https://fakestoreapi.com/products/categories", res => {
+            catData = res;
+            res.map(cat => $('.cat').append(`<option val="${cat}" class="text-capitalize">${cat}</option>`))
+        });
+
+        $('.search').keyup(function () {
+            let kw = $(this).val().toLowerCase().trim();
+            console.log(kw);
+            let filteredData = data.filter(function (data) {
+                if (data.title.toLowerCase().indexOf(kw) > -1 || data.description.toLowerCase().indexOf(kw) > -1 || data.price == kw) {
+                    return data;
+                }
+            })
+            toShow(filteredData);
+        });
+
+        $('.cat').change(function () {
+            let selected = $(this).val();
+            console.log(selected);
+            if (selected) {
+                let filteredData = data.filter(function (data) {
+                    if (data.category == selected) {
+                        return data;
+                    }
+                });
+                toShow(filteredData);
+            } else {
+                toShow(data);
+            }
+        });
+
+        function reCal() {
+            let cartCount = $('.cart').length;
+            $('.cart-count').html(cartCount);
+            if (cartCount > 0) {
+                let totalCost = $('.priceOfCart').toArray().map(price => price.innerHTML).reduce((x, y) => Number(x) + Number(y));
+                $('.total').html(`
+            <div class="d-flex justify-content-between p-4 align-items-end">
+                <p class="text-black-50 font-weight-bold">Total Cost</p>
+                <p class="font-weight-bold totalCost">$ ${totalCost}</p>
+            </div>
+            `);
+            } else {
+                $('.total').html(`<p class="text-black-50">Cart is empty</p>`);
+            }
+        }
+
+        $('.products').delegate(".cart-btn", "click", function () {
+            let cartData = data.filter((data) => $(this).attr('productId') == data.id)[0];
+            if ($(".cart").toArray().map(el => el.getAttribute("cartId")).includes($(this).attr('productId'))) {
+                alert("Already in cart");
+            } else {
+                $('.carts').append(`
+                <div class="cart card shadow my-2" cartId=${cartData.id}>
+                            <div class="card-body">
+                                <div class="d-flex align-items-end justify-content-between">
+                                    <div>
+                                        <img src="${cartData.image}" alt="">
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-outline-danger btn-sm remove-cart">
+                                            <i class="feather-trash-2"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="font-weight-bold overflow-hidden my-1">${cartData.title}</p>
+                                <div class="d-flex justify-content-between align-items-end">
+                                        <div action="" class="d-flex align-items-end justify-content-start">
+                                            <button class="btn-sm btn btn-outline-info plus-button"><i class="feather-plus"></i></button>
+                                            <input type="number" name="" id="" class="form-control w-25 mx-2 quantity" value="1"
+                                                min="1" unitPrice="${cartData.price}">
+                                            <button class="btn-sm btn btn-outline-info minus-button"><i class="feather-minus"></i></button>
+                                        </div>
+                                    <div class="text-nowrap">
+                                        $ <span class="priceOfCart">${cartData.price}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                `);
+                reCal();
+            }
+        });
+
+        $('.carts').delegate(".remove-cart", "click", function () {
+            $(this).parentsUntil('.carts').remove();
+            reCal();
+        });
+
+        $('.carts').delegate(".plus-button", "click", function () {
+            let price = Number($(this).parentsUntil(".carts").find(".quantity").attr("unitPrice"));
+            console.log(price);
+            let quantity = Number($(this).parentsUntil(".carts").find(".quantity").val()) + 1;
+            $(this).parentsUntil(".carts").find(".quantity").val(quantity);
+            let cost = price * quantity;
+            $(this).parentsUntil(".carts").find(".priceOfCart").html(cost);
+            reCal();
+        });
+
+        $('.carts').delegate(".minus-button", "click", function () {
+            let price = Number($(this).parentsUntil(".carts").find(".quantity").attr("unitPrice"));
+            let oldQ = Number($(this).parentsUntil(".carts").find(".quantity").val());
+            if (oldQ > 1) {
+                let quantity = oldQ - 1;
+                $(this).parentsUntil(".carts").find(".quantity").val(quantity);
+                let cost = price * quantity;
+                $(this).parentsUntil(".carts").find(".priceOfCart").html(cost);
+            } else {
+                alert("Can't reduce")
+            }
+            reCal();
+        });
+    </script>
+</body>
+
+</html>

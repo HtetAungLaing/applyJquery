@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+</body>
+<script src="node_modules/jquery/dist/jquery.min.js"></script>
+<script>
+    let arr = ["apple", "banana", "mango", "pineapple"];
+    arr.map((e, i, a) => console.log(e + i + a));
+    let newArr = arr.map((e, i) => e + "hello" + i);
+    console.log(newArr);
+
+    arr.map(function (e) {
+        document.write(`<li>${e}</li>`)
+    })
+    $('li').click(function (e) {
+        console.log(e.target.baseURI)
+    })
+</script>
+
+</html>
